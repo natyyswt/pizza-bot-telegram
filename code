@@ -1,0 +1,113 @@
+import nltk
+import json
+import random
+from telegram import Update
+from telegram.ext import Updater, MessageHandler, Filters, CommandHandler, ConversationHandler
+
+BOT_KEY = "5190541951:AAHq5-w46tSnaBxOv6z8McRalAqFY7IU2LY"
+
+BOT_CONFIG = {"intents":{
+"question_correction": {
+"examples":["да", "конечно", "нет", "изменить"],
+"responses":["Спасибо за заказ!", "Заказывайте еще"],
+},
+"question_pay": {
+"examples":["наличкой", "картой"],
+},
+"size": {
+"examples":["большую", "маленькую", "среднюю"],
+}
+}}
+
+def filter(text):
+text = text.lower()
+alphabet = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя -"
+result = [c for c in text if c in alphabet]
+return ''.join(result)
+
+def match(text, example):
+text =filter(text)
+example = example.lower()
+distance = nltk.edit_distance(text, example)/len(example)
+return distance < 0.4
+
+def get_intent(text):
+for intent in BOT_CONFIG["intents"]:
+for example in BOT_CONFIG["intents"][intent]["examples"]:
+if match(text,example):
+return intent
+
+def get_example(text):
+for intent in BOT_CONFIG["intents"]:
+for example in BOT_CONFIG["intents"][intent]["examples"]:
+if match(text,example):
+return example
+
+def bot(text):
+intent = get_intent(text)
+if intent:
+return random.choice(BOT_CONFIG["intents"][intent]["responses"])
+
+def start(update: Update, context):
+global name
+update.message.reply_text("Как вас зовут?")
+return 1
+def size(update: Update, context):
+name=update.message.text
+print(f"[user]: {name}")
+update.message.reply_text(f"Здравствуйте, {name}! Выберите размер пиццы - большая, средняя или маленькая?")
+return 2
+def pay(update: Update, context):
+global siz1
+question_size=update.message.text
+print(f"[user]: {question_size}")
+siz1 = get_example(question_size)
+update.message.reply_text("Чем вы будете платить?")
+return 3
+def street(update: Update, context):
+global pa
+question_pay = update.message.text
+print(f"[user]: {question_pay}")
+pa = get_example(question_pay)
+update.message.reply_text("Ваш адрес доставки?")
+return 4
+def correction(update: Update, context):
+question_street = update.message.text
+print(f"[user]: {question_street}")
+update.message.reply_text(f"Вы хотите {siz1} пиццу, способ оплаты – {pa}, доставить по адресу: {question_street}?")
+return 5
+def finish(update: Update, context):
+question_correction = update.message.text
+print(f"[user]: {question_correction}")
+correct = bot(question_correction)
+fnsh = get_example(question_correction)
+print(fnsh)
+if fnsh == "да":
+update.message.reply_text(correct)
+update.message.reply_text("Если хотите сделать заказ - напишите имя")
+return 1
+if fnsh == "нет":
+update.message.reply_text("Изменяем заказ, введите ваше имя")
+return 1
+
+def stop(bot, update):
+update.message.reply_text("До свидания!")
+return ConversationHandler.END
+
+conv_handler = ConversationHandler(entry_points=[CommandHandler('start', start)],
+states={
+1: [MessageHandler(Filters.text, size, pass_user_data=True)],
+2: [MessageHandler(Filters.text, pay, pass_user_data=True)],
+3: [MessageHandler(Filters.text, street, pass_user_data=True)],
+4: [MessageHandler(Filters.text, correction, pass_user_data=True)],
+5: [MessageHandler(Filters.text, finish, pass_user_data=True)]
+},
+fallbacks=[CommandHandler('stop', stop)]
+)
+
+upd = Updater(BOT_KEY)
+upd.dispatcher.add_handler(conv_handler)
+upd.dispatcher.add_handler(CommandHandler('start', start))
+upd.dispatcher.add_handler(CommandHandler('stop', stop))
+upd.start_polling()
+upd.idle()
