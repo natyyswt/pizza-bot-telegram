@@ -4,7 +4,7 @@ import random
 from telegram import Update
 from telegram.ext import Updater, MessageHandler, Filters, CommandHandler, ConversationHandler
 
-BOT_KEY = "5190541951:AAHq5-w46tSnaBxOv6z8McRalAqFY7IU2LY"
+BOT_KEY = ""
 
 BOT_CONFIG = {"intents":{
 "question_correction": {
