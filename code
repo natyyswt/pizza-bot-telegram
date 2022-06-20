@@ -4,7 +4,7 @@ import random
 from telegram import Update
 from telegram.ext import Updater, MessageHandler, Filters, CommandHandler, ConversationHandler
 
-BOT_KEY = ""
+BOT_KEY = "5490029291:AAFryYXBKEuWLsPDqFvEhvr_rWlC4JlZABA"
 
 BOT_CONFIG = {"intents":{
 "question_correction": {
@@ -20,79 +20,79 @@ BOT_CONFIG = {"intents":{
 }}
 
 def filter(text):
-text = text.lower()
-alphabet = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя -"
-result = [c for c in text if c in alphabet]
-return ''.join(result)
+  text = text.lower()
+  alphabet = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя -"
+  result = [c for c in text if c in alphabet]
+  return ''.join(result)
 
 def match(text, example):
-text =filter(text)
-example = example.lower()
-distance = nltk.edit_distance(text, example)/len(example)
-return distance < 0.4
+  text =filter(text)
+  example = example.lower()
+  distance = nltk.edit_distance(text, example)/len(example)
+  return distance < 0.4
 
 def get_intent(text):
-for intent in BOT_CONFIG["intents"]:
-for example in BOT_CONFIG["intents"][intent]["examples"]:
-if match(text,example):
-return intent
+  for intent in BOT_CONFIG["intents"]:
+    for example in BOT_CONFIG["intents"][intent]["examples"]:
+      if match(text,example):
+        return intent
 
 def get_example(text):
-for intent in BOT_CONFIG["intents"]:
-for example in BOT_CONFIG["intents"][intent]["examples"]:
-if match(text,example):
-return example
+  for intent in BOT_CONFIG["intents"]:
+    for example in BOT_CONFIG["intents"][intent]["examples"]:
+      if match(text,example):
+        return example
 
 def bot(text):
-intent = get_intent(text)
-if intent:
-return random.choice(BOT_CONFIG["intents"][intent]["responses"])
+  intent = get_intent(text)
+  if intent:
+   return random.choice(BOT_CONFIG["intents"][intent]["responses"])
 
 def start(update: Update, context):
-global name
-update.message.reply_text("Как вас зовут?")
-return 1
+  global name
+  update.message.reply_text("Как вас зовут?")
+  return 1
 def size(update: Update, context):
-name=update.message.text
-print(f"[user]: {name}")
-update.message.reply_text(f"Здравствуйте, {name}! Выберите размер пиццы - большая, средняя или маленькая?")
-return 2
+  name=update.message.text
+  print(f"[user]: {name}")
+  update.message.reply_text(f"Здравствуйте, {name}! Выберите размер пиццы - большая, средняя или маленькая?")
+  return 2
 def pay(update: Update, context):
-global siz1
-question_size=update.message.text
-print(f"[user]: {question_size}")
-siz1 = get_example(question_size)
-update.message.reply_text("Чем вы будете платить?")
-return 3
+  global siz1
+  question_size=update.message.text
+  print(f"[user]: {question_size}")
+  siz1 = get_example(question_size)
+  update.message.reply_text("Чем вы будете платить?")
+  return 3
 def street(update: Update, context):
-global pa
-question_pay = update.message.text
-print(f"[user]: {question_pay}")
-pa = get_example(question_pay)
-update.message.reply_text("Ваш адрес доставки?")
-return 4
+  global pa
+  question_pay = update.message.text
+  print(f"[user]: {question_pay}")
+  pa = get_example(question_pay)
+  update.message.reply_text("Ваш адрес доставки?")
+  return 4
 def correction(update: Update, context):
-question_street = update.message.text
-print(f"[user]: {question_street}")
-update.message.reply_text(f"Вы хотите {siz1} пиццу, способ оплаты – {pa}, доставить по адресу: {question_street}?")
-return 5
+  question_street = update.message.text
+  print(f"[user]: {question_street}")
+  update.message.reply_text(f"Вы хотите {siz1} пиццу, способ оплаты – {pa}, доставить по адресу: {question_street}?")
+  return 5
 def finish(update: Update, context):
-question_correction = update.message.text
-print(f"[user]: {question_correction}")
-correct = bot(question_correction)
-fnsh = get_example(question_correction)
-print(fnsh)
-if fnsh == "да":
-update.message.reply_text(correct)
-update.message.reply_text("Если хотите сделать заказ - напишите имя")
-return 1
-if fnsh == "нет":
-update.message.reply_text("Изменяем заказ, введите ваше имя")
-return 1
+  question_correction = update.message.text
+  print(f"[user]: {question_correction}")
+  correct = bot(question_correction)
+  fnsh = get_example(question_correction)
+  print(fnsh)
+  if fnsh == "да":
+    update.message.reply_text(correct)
+    update.message.reply_text("Если хотите сделать заказ - напишите имя")
+    return 1
+  if fnsh == "нет":
+    update.message.reply_text("Изменяем заказ, введите ваше имя")
+    return 1
 
 def stop(bot, update):
-update.message.reply_text("До свидания!")
-return ConversationHandler.END
+  update.message.reply_text("До свидания!")
+  return ConversationHandler.END
 
 conv_handler = ConversationHandler(entry_points=[CommandHandler('start', start)],
 states={
